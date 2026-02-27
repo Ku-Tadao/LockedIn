@@ -1,0 +1,68 @@
+---
+import { SVG_ICONS, getHeroTypeIcon } from '@/lib/icons';
+import type { Hero } from '@/lib/types';
+
+interface Props {
+  heroes: Hero[];
+}
+
+const { heroes } = Astro.props;
+
+const heroTypes = ['brawler', 'marksman', 'mystic', 'assassin'] as const;
+
+const typeLabels: Record<string, string> = {
+  brawler: 'Brawlers',
+  marksman: 'Marksmen',
+  mystic: 'Mystics',
+  assassin: 'Assassins',
+};
+
+const grouped = Object.fromEntries(
+  heroTypes.map(type => [
+    type,
+    heroes.filter(h => h.hero_type === type).sort((a, b) => a.name.localeCompare(b.name)),
+  ])
+);
+---
+
+<section id="heroes" class="content" style="display:none">
+    <div class="section-header">
+        <h2>Heroes</h2>
+        <div class="search-filter">
+            <span class="search-icon"><Fragment set:html={SVG_ICONS.search} /></span>
+            <input type="text" id="heroSearch" placeholder="Search heroes..." />
+        </div>
+    </div>
+
+    <div class="heroes-columns">
+        {heroTypes.map(type => (
+            <div class={`hero-column col-${type}`} data-hero-type={type}>
+                <div class="col-header">
+                    <span class="col-icon"><Fragment set:html={getHeroTypeIcon(type)} /></span>
+                    <span>{typeLabels[type]}</span>
+                    <span class="col-count">{grouped[type].length}</span>
+                </div>
+                <div class="hero-list">
+                    {grouped[type].map(h => (
+                        <div class="hero-card" data-hero-id={h.id} data-hero-name={h.name.toLowerCase()} data-hero-type={type}>
+                            <img src={h.images.icon_hero_card_webp || h.images.icon_hero_card} alt={h.name} loading="lazy" class="hero-portrait" />
+                            <div class="hero-card-info">
+                                <div class="hero-name">{h.name}</div>
+                                <div class="hero-tags">
+                                    {h.tags?.slice(0, 3).map(tag => (
+                                        <span class="hero-tag">{tag}</span>
+                                    ))}
+                                </div>
+                                <div class="hero-complexity">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <span class={`dot ${i <= (h.complexity || 1) ? 'filled' : ''}`}></span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ))}
+    </div>
+</section>

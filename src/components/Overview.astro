@@ -1,0 +1,112 @@
+---
+import { SVG_ICONS } from '@/lib/icons';
+import type { Hero } from '@/lib/types';
+
+interface Props {
+  heroes: Hero[];
+}
+
+const { heroes } = Astro.props;
+
+const brawlerCount = heroes.filter(h => h.hero_type === 'brawler').length;
+const marksmanCount = heroes.filter(h => h.hero_type === 'marksman').length;
+const mysticCount = heroes.filter(h => h.hero_type === 'mystic').length;
+const assassinCount = heroes.filter(h => h.hero_type === 'assassin').length;
+
+// Pick ~18 random hero portraits for the strip
+const shuffled = [...heroes].sort(() => Math.random() - 0.5);
+const stripHeroes = shuffled.slice(0, Math.min(18, heroes.length));
+
+// Pick 6 featured heroes (spread across types)
+const brawlers = heroes.filter(h => h.hero_type === 'brawler').slice(0, 2);
+const marksmen = heroes.filter(h => h.hero_type === 'marksman').slice(0, 2);
+const mystics = heroes.filter(h => h.hero_type === 'mystic').slice(0, 1);
+const assassins = heroes.filter(h => h.hero_type === 'assassin').slice(0, 1);
+const featured = [...brawlers, ...marksmen, ...mystics, ...assassins];
+---
+
+<section id="overview" class="content">
+    <div class="overview-splash">
+        <div class="splash-inner">
+            <h2>Deadlock <span>Data Hub</span></h2>
+            <p class="splash-sub">Explore heroes, abilities, stats and leaderboards for Deadlock. All data powered by the Deadlock API.</p>
+
+            <div class="hero-portrait-strip">
+                {stripHeroes.map(h => (
+                    <img src={h.images.icon_hero_card_webp || h.images.icon_hero_card} alt={h.name} loading="lazy" title={h.name} />
+                ))}
+            </div>
+
+            <div class="search-hero">
+                <div class="search-hero-input-wrap">
+                    <span class="search-icon"><Fragment set:html={SVG_ICONS.search} /></span>
+                    <input type="text" id="ovSearch" placeholder="Search player by Steam username..." />
+                </div>
+                <button type="button" id="ovSearchBtn" class="btn btn-brand">Find Player</button>
+            </div>
+            <p class="search-hint">Example: PlayerName &middot; SteamID</p>
+        </div>
+    </div>
+
+    <div class="overview-stats-row">
+        <div class="ov-stat ov-total" data-section="heroes">
+            <div class="ov-num">{heroes.length}</div>
+            <div class="ov-label">Total Heroes</div>
+        </div>
+        <div class="ov-stat ov-brawler" data-section="heroes">
+            <div class="ov-num">{brawlerCount}</div>
+            <div class="ov-label"><Fragment set:html={SVG_ICONS.shield} /> Brawlers</div>
+        </div>
+        <div class="ov-stat ov-marksman" data-section="heroes">
+            <div class="ov-num">{marksmanCount}</div>
+            <div class="ov-label"><Fragment set:html={SVG_ICONS.crosshair} /> Marksmen</div>
+        </div>
+        <div class="ov-stat ov-mystic" data-section="heroes">
+            <div class="ov-num">{mysticCount}</div>
+            <div class="ov-label"><Fragment set:html={SVG_ICONS.sparkle} /> Mystics</div>
+        </div>
+        <div class="ov-stat ov-assassin" data-section="heroes">
+            <div class="ov-num">{assassinCount}</div>
+            <div class="ov-label"><Fragment set:html={SVG_ICONS.skull} /> Assassins</div>
+        </div>
+    </div>
+
+    <div class="ql-grid">
+        <div class="ql-card" data-section="heroes">
+            <div class="ql-icon ql-heroes"><Fragment set:html={SVG_ICONS.users} /></div>
+            <div>
+                <div class="ql-title">Hero Database</div>
+                <p class="ql-desc">Browse heroes, abilities, and stats by type</p>
+            </div>
+        </div>
+        <div class="ql-card" data-section="stats">
+            <div class="ql-icon ql-meta"><Fragment set:html={SVG_ICONS.chart} /></div>
+            <div>
+                <div class="ql-title">Hero Stats</div>
+                <p class="ql-desc">Win rates, pick rates, and performance data</p>
+            </div>
+        </div>
+        <div class="ql-card" data-section="leaderboard">
+            <div class="ql-icon ql-leaderboard"><Fragment set:html={SVG_ICONS.leaderboard} /></div>
+            <div>
+                <div class="ql-title">Leaderboard</div>
+                <p class="ql-desc">Top players across all regions</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="featured-section">
+        <h3>Featured Heroes</h3>
+        <div class="featured-heroes-row">
+            {featured.map(h => (
+                <div class="featured-hero" data-hero-id={h.id}>
+                    <img src={h.images.icon_image_small_webp || h.images.icon_image_small} alt={h.name} loading="lazy" />
+                    <div class="fh-info">
+                        <div class="fh-name">{h.name}</div>
+                        <div class="fh-role" style={`color:var(--${h.hero_type})`}>{h.hero_type}</div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+</section>

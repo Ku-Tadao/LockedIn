@@ -1,0 +1,49 @@
+---
+import { SVG_ICONS } from '@/lib/icons';
+---
+
+<section id="leaderboard" class="content" style="display:none">
+    <div class="section-header">
+        <h2>Leaderboard</h2>
+        <div class="lb-controls">
+            <div class="region-selector">
+                <button class="region-btn active" data-region="Europe">Europe</button>
+                <button class="region-btn" data-region="NAmerica">N. America</button>
+                <button class="region-btn" data-region="SAmerica">S. America</button>
+                <button class="region-btn" data-region="Asia">Asia</button>
+                <button class="region-btn" data-region="Oceania">Oceania</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="lb-info-row">
+        <span class="lb-status" id="lbStatus">Loading leaderboard...</span>
+    </div>
+
+    <div class="lb-table-wrap">
+        <table class="lb-table" id="lbTable">
+            <thead>
+                <tr>
+                    <th class="lb-rank">#</th>
+                    <th class="lb-player">Player</th>
+                    <th class="lb-badge">Badge</th>
+                    <th>Ranked</th>
+                    <th>Top Heroes</th>
+                </tr>
+            </thead>
+            <tbody id="lbBody">
+                <tr class="lb-placeholder">
+                    <td colspan="5">
+                        <div class="lb-empty">
+                            <Fragment set:html={SVG_ICONS.leaderboard} />
+                            <p>Loading top players...</p>
+                            <div class="loading-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>

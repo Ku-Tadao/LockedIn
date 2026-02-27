@@ -1,0 +1,81 @@
+---
+import { SVG_ICONS } from '@/lib/icons';
+---
+
+<section id="stats" class="content" style="display:none">
+    <div class="section-header">
+        <h2>Hero Stats</h2>
+        <div class="meta-controls">
+            <div class="meta-select-group">
+                <label for="metaRegion">Region</label>
+                <select id="metaRegion">
+                    <option value="" selected>All Regions</option>
+                    <option value="Europe">Europe</option>
+                    <option value="NAmerica">N. America</option>
+                    <option value="SAmerica">S. America</option>
+                    <option value="Asia">Asia</option>
+                    <option value="Oceania">Oceania</option>
+                </select>
+            </div>
+            <div class="meta-select-group">
+                <label for="metaMinBadge">Min Rank</label>
+                <select id="metaMinBadge">
+                    <option value="0" selected>All Ranks</option>
+                    <option value="1">Initiate</option>
+                    <option value="2">Seeker</option>
+                    <option value="3">Alchemist</option>
+                    <option value="4">Arcanist</option>
+                    <option value="5">Ritualist</option>
+                    <option value="6">Emissary</option>
+                    <option value="7">Archon</option>
+                    <option value="8">Oracle</option>
+                    <option value="9">Phantom</option>
+                    <option value="10">Ascendant</option>
+                    <option value="11">Eternus</option>
+                </select>
+            </div>
+            <div class="meta-select-group">
+                <label for="metaHeroType">Type</label>
+                <select id="metaHeroType">
+                    <option value="" selected>All Types</option>
+                    <option value="brawler">Brawler</option>
+                    <option value="marksman">Marksman</option>
+                    <option value="mystic">Mystic</option>
+                    <option value="assassin">Assassin</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="meta-refresh-row">
+        <button id="metaRefresh" class="btn btn-brand"><Fragment set:html={SVG_ICONS.chart} /> Refresh Stats</button>
+        <span class="meta-status" id="metaStatus">Click refresh to load hero stats</span>
+    </div>
+
+    <div class="meta-table-wrap">
+        <table class="meta-table" id="metaTable">
+            <thead>
+                <tr>
+                    <th class="sortable" data-sort="hero">Hero</th>
+                    <th class="sortable" data-sort="type">Type</th>
+                    <th class="sortable" data-sort="winrate">Win Rate</th>
+                    <th class="sortable" data-sort="pickrate">Pick Rate</th>
+                    <th class="sortable" data-sort="matches">Matches</th>
+                    <th class="sortable" data-sort="kills">Avg Kills</th>
+                    <th class="sortable" data-sort="deaths">Avg Deaths</th>
+                    <th class="sortable" data-sort="assists">Avg Assists</th>
+                </tr>
+            </thead>
+            <tbody id="metaBody">
+                <tr class="meta-placeholder">
+                    <td colspan="8">
+                        <div class="meta-empty">
+                            <Fragment set:html={SVG_ICONS.chart} />
+                            <p>Click <strong>Refresh Stats</strong> to load hero performance data from the Deadlock API.</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>

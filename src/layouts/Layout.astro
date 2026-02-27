@@ -1,0 +1,93 @@
+---
+import '@/styles/global.css';
+import { SVG_ICONS } from '@/lib/icons';
+
+interface Props {
+  title?: string;
+  description?: string;
+  buildDate?: string;
+}
+
+const {
+  title = 'LockedIn — Deadlock Data Hub',
+  description = 'LockedIn: Explore Deadlock heroes, items, stats, and leaderboards. Your static Deadlock data companion.',
+  buildDate = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>{title}</title>
+    <meta name="description" content={description}>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-bar">
+                <div class="header-brand">
+                    <h1>LockedIn</h1>
+                    <span class="version-pill">Data Hub</span>
+                </div>
+                <div class="header-actions">
+                    <button id="themeToggle" class="btn btn-ghost btn-sm" type="button">Dark Mode</button>
+                    <div class="header-search" id="headerSearch">
+                        <input type="text" class="header-search-input" id="headerSearchInput" placeholder="Steam username..." />
+                        <button type="button" class="header-search-btn" id="headerSearchBtn">
+                            <Fragment set:html={SVG_ICONS.search} /> Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <div class="nav-inner">
+                <button class="nav-link active" data-section="overview" type="button">Overview</button>
+                <button class="nav-link" data-section="heroes" type="button">Heroes</button>
+                <button class="nav-link" data-section="stats" type="button">Stats</button>
+                <button class="nav-link" data-section="leaderboard" type="button">Leaderboard</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <slot />
+    </main>
+
+    <!-- Hero Detail Modal -->
+    <div id="heroModal" class="modal hidden" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-content" role="document">
+            <h2 id="modalHeroName" class="hero-name-role"></h2>
+            <div id="modalHeroDetails"></div>
+            <button type="button" id="closeModalBtn" class="btn btn-brand" style="margin-top:1rem">Close</button>
+        </div>
+    </div>
+
+    <!-- Player Search Modal -->
+    <div id="playerModal" class="player-modal hidden">
+        <div class="player-modal-content">
+            <div class="pm-search-row">
+                <input type="text" id="playerInput" placeholder="Search by Steam username..." />
+                <button type="button" id="playerSearchBtn" class="btn btn-brand">Search</button>
+                <button type="button" id="playerModalClose" class="btn btn-ghost">Close</button>
+            </div>
+            <div id="playerSearchResults"></div>
+            <div id="playerProfile" class="hidden"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>LockedIn &middot; Built {buildDate} &middot; Data: <a href="https://deadlock-api.com" target="_blank" rel="noopener noreferrer" class="stealth-link">Deadlock API</a></p>
+        </div>
+    </footer>
+</body>
+</html>

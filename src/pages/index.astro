@@ -1,0 +1,35 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Overview from '@/components/Overview.astro';
+import Heroes from '@/components/Heroes.astro';
+import Stats from '@/components/Stats.astro';
+import Leaderboard from '@/components/Leaderboard.astro';
+import { fetchAllData } from '@/lib/api';
+
+const data = await fetchAllData();
+
+const buildDate = new Date(data.buildInfo.generatedAt).toLocaleString('en-US', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+// Serialize hero data for client-side JS
+const clientPayload = JSON.stringify({
+  heroes: data.heroes,
+  items: data.items,
+  buildInfo: data.buildInfo,
+});
+---
+
+<Layout buildDate={buildDate}>
+  <!-- Hidden element to pass data to client-side JS -->
+  <div id="app-data" data-payload={clientPayload} style="display:none"></div>
+
+  <Overview heroes={data.heroes} />
+  <Heroes heroes={data.heroes} />
+  <Stats />
+  <Leaderboard />
+
+  <!-- Client-side interactivity -->
+  <script src="../scripts/app.js"></script>
+</Layout>
