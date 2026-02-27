@@ -119,7 +119,16 @@ function showHeroDetails(heroId) {
   h += '<div class="hd-info">';
   h += '<h2 class="hd-name">' + esc(hero.name) + '</h2>';
   h += '<span class="hd-type-pill ' + (hero.hero_type || '') + '">' + esc(hero.hero_type || 'Unknown') + '</span>';
-  if (hero.description) h += '<p class="hd-desc">' + esc(hero.description) + '</p>';
+  // description can be a string or {lore, role, playstyle}
+  const desc = hero.description;
+  if (desc) {
+    if (typeof desc === 'object') {
+      if (desc.role) h += '<p class="hd-desc"><strong>' + esc(desc.role) + '</strong></p>';
+      if (desc.playstyle) h += '<p class="hd-desc">' + esc(desc.playstyle) + '</p>';
+    } else {
+      h += '<p class="hd-desc">' + esc(desc) + '</p>';
+    }
+  }
 
   // Tags
   if (hero.tags && hero.tags.length) {
@@ -140,22 +149,24 @@ function showHeroDetails(heroId) {
     h += '</div></div>';
   }
 
-  // Starting Stats
+  // Starting Stats — values can be plain numbers or {value, display_stat_name} objects
+  const sv = (v) => (v != null && typeof v === 'object' && 'value' in v) ? v.value : v;
   if (hero.starting_stats) {
     const ss = hero.starting_stats;
     h += '<div class="hd-stats-section"><div class="hd-stats-bar"><h4>Starting Stats</h4></div>';
     h += '<div class="hd-stats-grid">';
 
     const statEntries = [
-      ['Max Health', ss.max_health],
-      ['Health Regen', ss.health_regen],
-      ['Bullet Armor', ss.bullet_armor && ss.bullet_armor !== '0' ? ss.bullet_armor + '%' : null],
-      ['Spirit Armor', ss.spirit_armor && ss.spirit_armor !== '0' ? ss.spirit_armor + '%' : null],
-      ['Move Speed', ss.move_speed],
-      ['Sprint Speed', ss.sprint_speed],
-      ['Stamina', ss.stamina],
-      ['Bullet Resist', ss.bullet_resist && ss.bullet_resist !== '0%' ? ss.bullet_resist : null],
-      ['Crit Multiplier', ss.crit_damage_received_scale],
+      ['Max Health', sv(ss.max_health)],
+      ['Health Regen', sv(ss.base_health_regen ?? ss.health_regen)],
+      ['Bullet Armor', (() => { const v = sv(ss.bullet_armor_damage_reduction ?? ss.bullet_armor); return v && v !== 0 && v !== '0' ? v + '%' : null; })()],
+      ['Spirit Armor', (() => { const v = sv(ss.tech_armor_damage_reduction ?? ss.spirit_armor); return v && v !== 0 && v !== '0' ? v + '%' : null; })()],
+      ['Move Speed', sv(ss.max_move_speed ?? ss.move_speed)],
+      ['Sprint Speed', sv(ss.sprint_speed)],
+      ['Stamina', sv(ss.stamina)],
+      ['Light Melee', sv(ss.light_melee_damage)],
+      ['Heavy Melee', sv(ss.heavy_melee_damage)],
+      ['Crit Multiplier', sv(ss.crit_damage_received_scale)],
     ].filter(([, v]) => v != null && v !== '' && v !== 0 && v !== '0');
 
     statEntries.forEach(([label, value]) => {
@@ -165,41 +176,34 @@ function showHeroDetails(heroId) {
     h += '</div></div>';
   }
 
-  // Weapon Stats
-  if (hero.weapon_stats_display) {
-    const ws = hero.weapon_stats_display;
-    h += '<div class="hd-stats-section"><div class="hd-stats-bar"><h4>Weapon Stats</h4></div>';
+  // Weapon Stats — try shop_stat_display.weapon_stats_display or hero_stats_ui
+  const wsd = hero.shop_stat_display?.weapon_stats_display;
+  if (wsd) {
+    h += '<div class="hd-stats-section"><div class="hd-stats-bar"><h4>Weapon</h4></div>';
     h += '<div class="hd-stats-grid">';
-
-    const weaponEntries = [
-      ['Bullet Damage', ws.bullet_damage],
-      ['Bullets/sec', ws.bullets_per_sec],
-      ['DPS', ws.dps],
-      ['Clip Size', ws.clip_size],
-      ['Ammo (Low)', ws.ammo_low],
-      ['Ammo (Mid)', ws.ammo_mid],
-      ['Ammo (High', ws.ammo_high],
-      ['Reload Time', ws.reload_time ? ws.reload_time + 's' : null],
-      ['Light Melee', ws.light_melee_damage],
-      ['Heavy Melee', ws.heavy_melee_damage],
-    ].filter(([, v]) => v != null && v !== '' && v !== 0);
-
-    weaponEntries.forEach(([label, value]) => {
-      h += '<div class="hd-stat-card"><div class="hd-stat-value" style="color:' + typeColor + '">' + esc(String(value)) + '</div>';
-      h += '<div class="hd-stat-label">' + esc(label) + '</div></div>';
-    });
+    if (wsd.weapon_attributes && wsd.weapon_attributes.length) {
+      const attrLabels = { EWeaponAttribute_RapidFire: 'Rapid Fire', EWeaponAttribute_MediumRange: 'Medium Range', EWeaponAttribute_LongRange: 'Long Range', EWeaponAttribute_ShortRange: 'Short Range', EWeaponAttribute_SemiAutomatic: 'Semi-Auto', EWeaponAttribute_FullAutomatic: 'Full Auto', EWeaponAttribute_BurstFire: 'Burst Fire' };
+      wsd.weapon_attributes.forEach((a) => {
+        h += '<div class="hd-stat-card"><div class="hd-stat-value" style="color:' + typeColor + '">' + esc(attrLabels[a] || a.replace(/EWeaponAttribute_/g, '').replace(/_/g, ' ')) + '</div>';
+        h += '<div class="hd-stat-label">Weapon Type</div></div>';
+      });
+    }
+    // Show weapon image if available
+    if (wsd.weapon_image_webp || wsd.weapon_image) {
+      h += '<div style="grid-column:1/-1;text-align:center;padding:.5rem"><img src="' + (wsd.weapon_image_webp || wsd.weapon_image) + '" alt="Weapon" style="max-width:200px;height:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))" loading="lazy"/></div>';
+    }
     h += '</div></div>';
   }
 
-  // Abilities (from hero items)
-  if (hero.items && hero.items.length) {
-    const abilities = hero.items.filter((item) => item && item.name);
-    if (abilities.length) {
+  // Abilities — items is a key-value map like {signature1: "ability_name", ...}
+  if (hero.items && typeof hero.items === 'object') {
+    const sigKeys = Object.keys(hero.items).filter((k) => k.startsWith('signature'));
+    if (sigKeys.length) {
       h += '<div class="hd-abilities-section"><h4>Abilities</h4>';
-      abilities.forEach((ab) => {
-        const img = ab.image ? '<img src="' + ab.image + '" alt="" class="ability-image">' : '';
-        h += '<div class="ability-box"><div class="ability-header">' + esc(ab.name) + '</div>';
-        h += '<div class="ability-details">' + img + '<div>' + esc(ab.description || 'No description available.') + '</div></div></div>';
+      sigKeys.sort().forEach((key) => {
+        const abilityName = hero.items[key];
+        const displayName = String(abilityName || '').replace(/^(ability_|citadel_ability_)/i, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        h += '<div class="ability-box"><div class="ability-header">' + esc(displayName) + '</div></div>';
       });
       h += '</div>';
     }
@@ -649,6 +653,14 @@ function bind() {
   // Theme toggle
   const tt = document.getElementById('themeToggle');
   if (tt) tt.addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+
+  // Product switcher
+  const psBtn = document.getElementById('productSwitcherBtn');
+  const psDrop = document.getElementById('productSwitcherDropdown');
+  if (psBtn && psDrop) {
+    psBtn.addEventListener('click', (e) => { e.stopPropagation(); psDrop.classList.toggle('hidden'); });
+    document.addEventListener('click', (e) => { if (!psDrop.contains(e.target) && e.target !== psBtn) psDrop.classList.add('hidden'); });
+  }
 
   // Header search bar
   const hsb = document.getElementById('headerSearchBtn');
