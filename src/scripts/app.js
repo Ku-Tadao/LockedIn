@@ -706,7 +706,10 @@ function bind() {
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   bind();
-  showSection(location.hash ? location.hash.slice(1) : 'overview');
+  const section = location.hash ? location.hash.slice(1) : 'overview';
+  history.replaceState(null, '', location.pathname);
+  showSection(section);
+  window.scrollTo(0, 0);
 });
 
 window.LockedIn = { showHeroDetails, closeModal, searchPlayer, loadProfile, backToSearch, fetchHeroStats, overviewSearch, openPlayerModal, closePlayerModal, fetchLeaderboard };
