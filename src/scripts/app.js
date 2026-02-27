@@ -57,7 +57,6 @@ function showSection(id) {
   if (el) {
     el.style.display = '';
     setActiveNav(id);
-    history.replaceState(null, '', '#' + id);
   }
   if (id === 'stats' && !state.metaLoaded) {
     state.metaLoaded = true;
@@ -704,12 +703,11 @@ function bind() {
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
   initTheme();
   bind();
-  const section = location.hash ? location.hash.slice(1) : 'overview';
-  history.replaceState(null, '', location.pathname);
-  showSection(section);
-  window.scrollTo(0, 0);
+  showSection('overview');
 });
 
 window.LockedIn = { showHeroDetails, closeModal, searchPlayer, loadProfile, backToSearch, fetchHeroStats, overviewSearch, openPlayerModal, closePlayerModal, fetchLeaderboard };
