@@ -148,49 +148,64 @@ function showHeroDetails(heroId) {
     h += '</div></div>';
   }
 
-  // Starting Stats — values can be plain numbers or {value, display_stat_name} objects
+  // BASE STATS — 3-column layout (Weapon · Vitality · Spirit)
   const sv = (v) => (v != null && typeof v === 'object' && 'value' in v) ? v.value : v;
   if (hero.starting_stats) {
     const ss = hero.starting_stats;
-    h += '<div class="hd-stats-section"><div class="hd-stats-bar"><h4>Starting Stats</h4></div>';
-    h += '<div class="hd-stats-grid">';
+    const lu = hero.standard_level_up_upgrades || {};
+    const pl = (v) => (v && v !== 0) ? '<span class="bs-per-level">+' + v + '</span>' : '';
+    const bsr = (label, val, extra) => '<div class="bs-row"><span class="bs-label">' + esc(label) + '</span><span class="bs-value">' + val + (extra || '') + '</span></div>';
+    const bsrP = (label, id) => '<div class="bs-row"><span class="bs-label">' + esc(label) + '</span><span class="bs-value" data-bs="' + id + '">—</span></div>';
+    const wsd = hero.shop_stat_display?.weapon_stats_display;
+    const attrLabels = { EWeaponAttribute_RapidFire:'Rapid Fire', EWeaponAttribute_MediumRange:'Medium Range', EWeaponAttribute_LongRange:'Long Range', EWeaponAttribute_ShortRange:'Short Range', EWeaponAttribute_SemiAutomatic:'Semi-Auto', EWeaponAttribute_FullAutomatic:'Full Auto', EWeaponAttribute_BurstFire:'Burst Fire', EWeaponAttribute_HeavyHitter:'Heavy Hitter', EWeaponAttribute_Projectile:'Projectile' };
 
-    const statEntries = [
-      ['Max Health', sv(ss.max_health)],
-      ['Health Regen', sv(ss.base_health_regen ?? ss.health_regen)],
-      ['Bullet Armor', (() => { const v = sv(ss.bullet_armor_damage_reduction ?? ss.bullet_armor); return v && v !== 0 && v !== '0' ? v + '%' : null; })()],
-      ['Spirit Armor', (() => { const v = sv(ss.tech_armor_damage_reduction ?? ss.spirit_armor); return v && v !== 0 && v !== '0' ? v + '%' : null; })()],
-      ['Move Speed', sv(ss.max_move_speed ?? ss.move_speed)],
-      ['Sprint Speed', sv(ss.sprint_speed)],
-      ['Stamina', sv(ss.stamina)],
-      ['Light Melee', sv(ss.light_melee_damage)],
-      ['Heavy Melee', sv(ss.heavy_melee_damage)],
-      ['Crit Multiplier', sv(ss.crit_damage_received_scale)],
-    ].filter(([, v]) => v != null && v !== '' && v !== 0 && v !== '0');
+    h += '<div class="hd-basestats"><h4>Base Stats</h4>';
+    h += '<div class="bs-columns">';
 
-    statEntries.forEach(([label, value]) => {
-      h += '<div class="hd-stat-card"><div class="hd-stat-value" style="color:' + typeColor + '">' + esc(String(value)) + '</div>';
-      h += '<div class="hd-stat-label">' + esc(label) + '</div></div>';
-    });
+    // ── Weapon column ──
+    h += '<div class="bs-column"><div class="bs-col-head weapon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><path d="M20.2 20.2l-2.8-2.8M3.8 3.8l2.8 2.8M6.6 17.4l-2.8 2.8M17.4 6.6l2.8-2.8"/></svg>Weapon Stats</div>';
+    if (wsd && wsd.weapon_attributes && wsd.weapon_attributes.length) {
+      h += '<div class="bs-tags">';
+      wsd.weapon_attributes.forEach((a) => { h += '<span class="bs-tag">' + esc(attrLabels[a] || a.replace(/EWeaponAttribute_/g,'').replace(/_/g,' ')) + '</span>'; });
+      h += '</div>';
+    }
+    h += '<div class="bs-list">';
+    h += bsrP('DPS', 'weapon-dps');
+    h += bsrP('Bullet Damage', 'weapon-bdmg');
+    h += bsrP('Ammo', 'weapon-ammo');
+    h += bsrP('Bullets/sec', 'weapon-bps');
+    h += bsrP('Reload Time', 'weapon-reload');
+    const meleePL = lu.MODIFIER_VALUE_BASE_MELEE_DAMAGE_FROM_LEVEL;
+    h += bsr('Light Melee', sv(ss.light_melee_damage), pl(meleePL));
+    h += bsr('Heavy Melee', sv(ss.heavy_melee_damage), pl(meleePL));
+    h += '</div>';
+    if (wsd && (wsd.weapon_image_webp || wsd.weapon_image)) {
+      h += '<div class="bs-weapon-img"><img src="' + (wsd.weapon_image_webp || wsd.weapon_image) + '" alt="Weapon" loading="lazy"/></div>';
+    }
+    h += '</div>';
+
+    // ── Vitality column ──
+    h += '<div class="bs-column"><div class="bs-col-head vitality"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/></svg>Vitality Stats</div>';
+    h += '<div class="bs-list">';
+    h += bsr('Health', sv(ss.max_health), pl(lu.MODIFIER_VALUE_BASE_HEALTH_FROM_LEVEL));
+    h += bsr('Health Regen', sv(ss.base_health_regen ?? ss.health_regen));
+    const bulletRes = sv(ss.bullet_armor_damage_reduction ?? ss.bullet_armor) || 0;
+    h += bsr('Bullet Resist', bulletRes + '%', pl(lu.MODIFIER_VALUE_BULLET_ARMOR_DAMAGE_RESIST));
+    const spiritRes = sv(ss.tech_armor_damage_reduction ?? ss.spirit_armor) || 0;
+    h += bsr('Spirit Resist', spiritRes + '%', pl(lu.MODIFIER_VALUE_TECH_ARMOR_DAMAGE_RESIST));
+    h += bsr('Move Speed', sv(ss.max_move_speed ?? ss.move_speed) + 'm/s');
+    if (sv(ss.sprint_speed)) h += bsr('Sprint Speed', sv(ss.sprint_speed) + 'm/s');
+    h += bsr('Stamina', sv(ss.stamina));
+    const stRegen = sv(ss.stamina_regen_per_second);
+    if (stRegen && stRegen > 0) h += bsr('Stamina Cooldown', (1 / stRegen).toFixed(1) + 's');
     h += '</div></div>';
-  }
 
-  // Weapon Stats — try shop_stat_display.weapon_stats_display or hero_stats_ui
-  const wsd = hero.shop_stat_display?.weapon_stats_display;
-  if (wsd) {
-    h += '<div class="hd-stats-section"><div class="hd-stats-bar"><h4>Weapon</h4></div>';
-    h += '<div class="hd-stats-grid">';
-    if (wsd.weapon_attributes && wsd.weapon_attributes.length) {
-      const attrLabels = { EWeaponAttribute_RapidFire: 'Rapid Fire', EWeaponAttribute_MediumRange: 'Medium Range', EWeaponAttribute_LongRange: 'Long Range', EWeaponAttribute_ShortRange: 'Short Range', EWeaponAttribute_SemiAutomatic: 'Semi-Auto', EWeaponAttribute_FullAutomatic: 'Full Auto', EWeaponAttribute_BurstFire: 'Burst Fire' };
-      wsd.weapon_attributes.forEach((a) => {
-        h += '<div class="hd-stat-card"><div class="hd-stat-value" style="color:' + typeColor + '">' + esc(attrLabels[a] || a.replace(/EWeaponAttribute_/g, '').replace(/_/g, ' ')) + '</div>';
-        h += '<div class="hd-stat-label">Weapon Type</div></div>';
-      });
-    }
-    // Show weapon image if available
-    if (wsd.weapon_image_webp || wsd.weapon_image) {
-      h += '<div style="grid-column:1/-1;text-align:center;padding:.5rem"><img src="' + (wsd.weapon_image_webp || wsd.weapon_image) + '" alt="Weapon" style="max-width:200px;height:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))" loading="lazy"/></div>';
-    }
+    // ── Spirit column ──
+    h += '<div class="bs-column"><div class="bs-col-head spirit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Spirit Stats</div>';
+    h += '<div class="bs-list">';
+    h += bsr('Spirit Power', '0', pl(lu.MODIFIER_VALUE_TECH_POWER));
+    h += '</div></div>';
+
     h += '</div></div>';
   }
 
@@ -330,6 +345,23 @@ async function fetchAbilityDetails(hero, sigKeys) {
     });
 
     container.innerHTML = html;
+
+    // ── Populate weapon stats from items cache ──
+    const weaponCN = hero.items?.weapon_primary;
+    if (weaponCN && itemMap[weaponCN]) {
+      const wi = itemMap[weaponCN].weapon_info;
+      if (wi) {
+        const setBS = (id, val) => { const el = document.querySelector('[data-bs="' + id + '"]'); if (el) el.innerHTML = val; };
+        const lu = hero.standard_level_up_upgrades || {};
+        const pl = (v) => (v && v !== 0) ? '<span class="bs-per-level">+' + v + '</span>' : '';
+        if (wi.damage_per_second != null) setBS('weapon-dps', wi.damage_per_second.toFixed(1));
+        const bdmg = wi.bullet_damage ?? wi.damage_per_shot;
+        if (bdmg != null) setBS('weapon-bdmg', (+bdmg).toFixed(1) + pl(lu.MODIFIER_VALUE_BASE_BULLET_DAMAGE_FROM_LEVEL));
+        if (wi.clip_size != null) setBS('weapon-ammo', wi.clip_size);
+        if (wi.bullets_per_second != null) setBS('weapon-bps', wi.bullets_per_second.toFixed(2));
+        if (wi.reload_duration != null) setBS('weapon-reload', wi.reload_duration.toFixed(2) + 's');
+      }
+    }
   } catch (e) {
     console.warn('Failed to fetch ability details:', e);
     // Fallback: show just names

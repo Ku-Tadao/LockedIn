@@ -630,6 +630,58 @@ section.content { animation:fadeUp .45s cubic-bezier(.4,0,.2,1) both; }
 .hd-stat-card .hd-stat-bar { height:4px; background:var(--surface); border-radius:2px; overflow:hidden; margin-top:.5rem; position:relative; }
 .hd-stat-card .hd-stat-bar-fill { height:100%; border-radius:2px; transition:width .6s ease; }
 
+/* ═══ Hero Detail — Base Stats 3-Column ═══ */
+.hd-basestats { margin-bottom:1.5rem; }
+.hd-basestats > h4 {
+    font-family:"Chakra Petch",system-ui,sans-serif; font-weight:700; font-size:1rem;
+    text-transform:uppercase; letter-spacing:.04em; margin:0 0 .75rem;
+}
+.hd-basestats > h4::after {
+    content:''; display:inline-block; width:24px; height:2px; background:var(--brand);
+    border-radius:1px; margin-left:.4rem; vertical-align:middle;
+}
+.bs-columns { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; }
+.bs-column {
+    border:1px solid var(--border); border-radius:var(--radius);
+    overflow:hidden; display:flex; flex-direction:column;
+}
+.bs-col-head {
+    padding:.55rem .75rem; font-family:"Chakra Petch",system-ui,sans-serif;
+    font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em;
+    display:flex; align-items:center; gap:.4rem; border-bottom:2px solid;
+}
+.bs-col-head svg { flex-shrink:0; }
+.bs-col-head.weapon  { background:rgba(251,191,36,.07); color:#fbbf24; border-bottom-color:rgba(251,191,36,.25); }
+.bs-col-head.vitality { background:rgba(52,211,153,.07); color:#34d399; border-bottom-color:rgba(52,211,153,.25); }
+.bs-col-head.spirit  { background:rgba(167,139,250,.07); color:#a78bfa; border-bottom-color:rgba(167,139,250,.25); }
+.bs-tags { display:flex; gap:.3rem; flex-wrap:wrap; padding:.4rem .75rem; border-bottom:1px solid var(--border); background:var(--surface-strong); }
+.bs-tag {
+    font-size:.6rem; padding:.12rem .35rem; border-radius:4px;
+    background:rgba(251,191,36,.1); color:#fbbf24; font-weight:700;
+    font-family:"Chakra Petch",system-ui,sans-serif; text-transform:uppercase; letter-spacing:.04em;
+}
+.bs-list { flex:1; padding:.1rem 0; }
+.bs-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:.32rem .75rem; font-size:.82rem; transition:background .15s;
+}
+.bs-row:hover { background:color-mix(in srgb,var(--surface-strong) 60%,var(--brand-subtle,rgba(109,40,217,.06))); }
+.bs-row + .bs-row { border-top:1px solid color-mix(in srgb,var(--border) 40%,transparent); }
+.bs-label { color:var(--muted); font-family:"Space Grotesk",system-ui,sans-serif; font-size:.8rem; }
+.bs-value {
+    font-family:"Chakra Petch",system-ui,sans-serif; font-weight:600;
+    color:var(--text); text-align:right; white-space:nowrap;
+}
+.bs-per-level { color:var(--brand-light,#a78bfa); font-size:.72rem; font-weight:500; margin-left:.15rem; }
+.bs-weapon-img {
+    padding:.5rem; text-align:center; border-top:1px solid var(--border);
+    background:var(--surface-strong);
+}
+.bs-weapon-img img { max-width:160px; height:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,.3)); }
+@media(max-width:720px) {
+    .bs-columns { grid-template-columns:1fr; }
+}
+
 /* ═══ Hero Detail — Abilities ═══ */
 .hd-abilities-section { margin-bottom:1.5rem; }
 .hd-abilities-section h4 {
