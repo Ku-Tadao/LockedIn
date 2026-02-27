@@ -642,13 +642,47 @@ section.content { animation:fadeUp .45s cubic-bezier(.4,0,.2,1) both; }
 }
 .ability-box { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:.75rem; transition:border-color .2s ease; }
 .ability-box:hover { border-color:color-mix(in srgb,var(--brand) 50%,transparent); }
+.ability-box.ability-ultimate { border-color:color-mix(in srgb,var(--brand) 30%,transparent); background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 6%,transparent),transparent); }
 .ability-header {
     display:flex; justify-content:space-between; align-items:center; background:var(--surface-strong);
     padding:.6rem .85rem; font-weight:700; font-family:"Chakra Petch",system-ui,sans-serif;
-    font-size:1rem; text-transform:uppercase; letter-spacing:.02em;
+    font-size:1rem; gap:.75rem; flex-wrap:wrap;
 }
-.ability-details { display:flex; gap:1rem; align-items:center; padding:.85rem; font-size:.95rem; line-height:1.5; }
-.ability-image { width:56px; height:56px; background:var(--surface-strong); border-radius:50%; object-fit:contain; padding:6px; flex-shrink:0; }
+.ability-header-left { display:flex; align-items:center; gap:.65rem; min-width:0; }
+.ability-title-group { display:flex; flex-direction:column; gap:.1rem; min-width:0; }
+.ability-name { font-weight:700; font-size:.95rem; text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ability-slot { font-size:.7rem; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.ability-slot.ult { color:var(--brand); }
+.ability-image { width:44px; height:44px; background:var(--surface); border-radius:10px; object-fit:contain; padding:4px; flex-shrink:0; border:1px solid var(--border); }
+.ability-stats { display:flex; gap:.4rem; flex-shrink:0; flex-wrap:wrap; }
+.ability-stat { display:inline-flex; align-items:center; gap:3px; font-size:.72rem; font-weight:600; padding:.2rem .45rem; border-radius:6px; background:var(--surface); color:var(--text-secondary, var(--muted)); white-space:nowrap; font-family:"Space Grotesk",system-ui,sans-serif; }
+.ability-stat.cd { color:#60a5fa; }
+.ability-stat.dur { color:#34d399; }
+.ability-stat.rng { color:#fbbf24; }
+.ability-stat svg { flex-shrink:0; }
+.ability-details { padding:.75rem .85rem; font-size:.85rem; line-height:1.6; color:color-mix(in srgb,var(--text) 85%,transparent); }
+.ability-desc { max-width:100%; }
+.ability-desc .highlight { color:var(--brand-light, #a78bfa); font-weight:600; }
+.ability-desc .diminish { color:var(--muted); font-size:.8rem; }
+.ability-upgrades { display:flex; flex-direction:column; gap:.3rem; padding:.5rem .85rem .75rem; border-top:1px solid var(--border); }
+.ability-tier { display:flex; align-items:baseline; gap:.5rem; font-size:.78rem; line-height:1.4; }
+.tier-badge { display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:20px; border-radius:5px; font-weight:700; font-size:.65rem; font-family:"Chakra Petch",system-ui,sans-serif; text-transform:uppercase; letter-spacing:.03em; flex-shrink:0; padding:0 .3rem; }
+.ability-tier:nth-child(1) .tier-badge { background:color-mix(in srgb,#60a5fa 18%,transparent); color:#60a5fa; }
+.ability-tier:nth-child(2) .tier-badge { background:color-mix(in srgb,#a78bfa 18%,transparent); color:#a78bfa; }
+.ability-tier:nth-child(3) .tier-badge { background:color-mix(in srgb,#f59e0b 18%,transparent); color:#f59e0b; }
+.tier-text { color:var(--muted); }
+
+/* Ability skeleton loaders */
+.ability-skeleton .ability-header { gap:.65rem; }
+.skeleton-circle { width:44px; height:44px; border-radius:10px; background:var(--surface); animation:shimmer 1.5s infinite; flex-shrink:0; }
+.skeleton-lines { display:flex; flex-direction:column; gap:6px; flex:1; }
+.skeleton-line { height:12px; border-radius:4px; background:var(--surface); animation:shimmer 1.5s infinite; width:60%; }
+.skeleton-line.short { width:35%; }
+@keyframes shimmer {
+    0% { opacity:.4; }
+    50% { opacity:.7; }
+    100% { opacity:.4; }
+}
 
 @media(max-width:720px) {
     .hd-header { flex-direction:column; align-items:center; text-align:center; }

@@ -194,21 +194,156 @@ function showHeroDetails(heroId) {
     h += '</div></div>';
   }
 
-  // Abilities — items is a key-value map like {signature1: "ability_name", ...}
+  // Abilities — placeholder, filled asynchronously
   if (hero.items && typeof hero.items === 'object') {
     const sigKeys = Object.keys(hero.items).filter((k) => k.startsWith('signature'));
     if (sigKeys.length) {
       h += '<div class="hd-abilities-section"><h4>Abilities</h4>';
-      sigKeys.sort().forEach((key) => {
-        const abilityName = hero.items[key];
-        const displayName = String(abilityName || '').replace(/^(ability_|citadel_ability_)/i, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-        h += '<div class="ability-box"><div class="ability-header">' + esc(displayName) + '</div></div>';
+      h += '<div id="abilities-container">';
+      // Show skeleton placeholders while loading
+      sigKeys.sort().forEach(() => {
+        h += '<div class="ability-box ability-skeleton"><div class="ability-header"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div></div>';
       });
-      h += '</div>';
+      h += '</div></div>';
     }
   }
 
   det.innerHTML = h;
+
+  // Fetch and render rich ability details
+  if (hero.items && typeof hero.items === 'object') {
+    const sigKeys = Object.keys(hero.items).filter((k) => k.startsWith('signature')).sort();
+    if (sigKeys.length) fetchAbilityDetails(hero, sigKeys);
+  }
+}
+
+let _itemsCache = null;
+async function fetchAbilityDetails(hero, sigKeys) {
+  const container = document.getElementById('abilities-container');
+  if (!container) return;
+
+  try {
+    // Cache the full items list — reuse for all heroes
+    if (!_itemsCache) {
+      const resp = await fetch('https://assets.deadlock-api.com/v2/items');
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      _itemsCache = await resp.json();
+    }
+    const allItems = _itemsCache;
+
+    // Build class_name → item lookup
+    const itemMap = {};
+    (Array.isArray(allItems) ? allItems : []).forEach((it) => { itemMap[it.class_name] = it; });
+
+    let html = '';
+    sigKeys.forEach((key, idx) => {
+      const className = hero.items[key];
+      const item = itemMap[className];
+      if (!item) {
+        // Fallback: just show prettified name
+        const dn = prettyAbilityName(className);
+        html += '<div class="ability-box"><div class="ability-header"><span class="ability-name">' + esc(dn) + '</span></div></div>';
+        return;
+      }
+
+      const name = item.name || prettyAbilityName(className);
+      const img = item.image_webp || item.image || '';
+      const cd = item.properties?.AbilityCooldown?.value;
+      const dur = item.properties?.AbilityDuration?.value;
+      const range = item.properties?.AbilityCastRange?.value;
+      const rawDesc = item.description;
+      let desc = '';
+      if (rawDesc && typeof rawDesc === 'object') {
+        // Prefer tooltip_details for cleaner text, fallback to desc/quip
+        const td = item.tooltip_details;
+        if (td && td.info_sections && td.info_sections.length && td.info_sections[0].loc_string) {
+          desc = td.info_sections[0].loc_string;
+        } else {
+          desc = rawDesc.desc || rawDesc.quip || '';
+        }
+      } else if (typeof rawDesc === 'string') {
+        desc = rawDesc;
+      }
+      const isUlt = item.ability_type === 'ultimate';
+      const upgrades = item.upgrades || [];
+
+      html += '<div class="ability-box' + (isUlt ? ' ability-ultimate' : '') + '">';
+
+      // Header row: icon + name/slot + stat badges
+      html += '<div class="ability-header">';
+      html += '<div class="ability-header-left">';
+      if (img) html += '<img class="ability-image" src="' + img + '" alt="' + esc(name) + '" loading="lazy"/>';
+      html += '<div class="ability-title-group">';
+      html += '<span class="ability-name">' + esc(name) + '</span>';
+      html += '<span class="ability-slot' + (isUlt ? ' ult' : '') + '">' + (isUlt ? 'Ultimate' : 'Ability ' + (idx + 1)) + '</span>';
+      html += '</div></div>';
+
+      // Stat badges
+      html += '<div class="ability-stats">';
+      if (cd && cd !== '0' && cd !== 0) {
+        html += '<span class="ability-stat cd" title="Cooldown"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + cd + 's</span>';
+      }
+      if (dur && dur !== '0' && dur !== 0) {
+        html += '<span class="ability-stat dur" title="Duration"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v4l2 2"/></svg>' + dur + 's</span>';
+      }
+      if (range && range !== '0' && range !== 0 && range !== '0m') {
+        html += '<span class="ability-stat rng" title="Cast Range"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>' + range + '</span>';
+      }
+      html += '</div></div>';
+
+      // Description body
+      if (desc) {
+        let clean = desc;
+        // Strip inline SVG icons (128x128 game damage-type icons)
+        clean = clean.replace(/<svg[^>]*>[\s\S]*?<\/svg>\s*/gi, '');
+        // Clean up game binding references like {g:citadel_binding:'Crouch'}
+        clean = clean.replace(/\{g:citadel_binding:'([^']*)'\}/g, '[$1]');
+        // Strip inline-attribute-label spans but keep their text
+        clean = clean.replace(/<span class="inline-attribute-label[^"]*"[^>]*>/gi, '');
+        // Remove leftover {s:sign} tokens
+        clean = clean.replace(/\{s:sign\}/gi, '+');
+        // Collapse excessive whitespace/newlines
+        clean = clean.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+        if (clean) {
+          html += '<div class="ability-details"><div class="ability-desc">' + clean + '</div></div>';
+        }
+      }
+
+      // Upgrade tiers
+      if (upgrades.length) {
+        html += '<div class="ability-upgrades">';
+        upgrades.forEach((tier, ti) => {
+          if (!tier.property_upgrades || !tier.property_upgrades.length) return;
+          const tierLabel = (ti + 1);
+          const bonuses = tier.property_upgrades.map((pu) => {
+            const pName = prettyAbilityName(pu.name || '');
+            const val = pu.bonus;
+            const sign = (typeof val === 'number' && val > 0) ? '+' : (typeof val === 'string' && !val.startsWith('-') && !val.startsWith('+')) ? '+' : '';
+            return sign + val + ' ' + pName;
+          }).join(', ');
+          html += '<div class="ability-tier"><span class="tier-badge">T' + tierLabel + '</span><span class="tier-text">' + esc(bonuses) + '</span></div>';
+        });
+        html += '</div>';
+      }
+
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+  } catch (e) {
+    console.warn('Failed to fetch ability details:', e);
+    // Fallback: show just names
+    let html = '';
+    sigKeys.forEach((key) => {
+      const dn = prettyAbilityName(hero.items[key]);
+      html += '<div class="ability-box"><div class="ability-header"><span class="ability-name">' + esc(dn) + '</span></div></div>';
+    });
+    container.innerHTML = html;
+  }
+}
+
+function prettyAbilityName(raw) {
+  return String(raw || '').replace(/^(ability_|citadel_ability_)/i, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function closeModal() {
