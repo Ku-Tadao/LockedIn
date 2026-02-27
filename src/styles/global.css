@@ -134,7 +134,8 @@ nav {
     background:color-mix(in srgb, var(--bg) 82%, transparent);
     border-bottom:1px solid var(--border);
 }
-.nav-inner { display:flex; align-items:center; gap:.35rem; padding:.6rem 0; overflow-x:auto; }
+.nav-wrap { display:flex; align-items:center; gap:.5rem; }
+.nav-inner { display:flex; align-items:center; gap:.35rem; padding:.6rem 0; overflow-x:auto; flex:1; min-width:0; }
 .nav-link {
     border:none; background:transparent; padding:.45rem .85rem; border-radius:10px;
     color:var(--muted); font-weight:700; font-size:.85rem; cursor:pointer;
@@ -146,7 +147,7 @@ nav {
 }
 
 /* Product Switcher */
-.product-switcher { position:relative; margin-left:auto; }
+.product-switcher { position:relative; flex-shrink:0; }
 .product-switcher-btn {
     display:flex; align-items:center; gap:.4rem; border:none; background:transparent;
     padding:.45rem .75rem; border-radius:10px; color:var(--muted); font-weight:700;
