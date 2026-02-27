@@ -34,6 +34,17 @@ const grouped = Object.fromEntries(
         </div>
     </div>
 
+    <!-- Tier List -->
+    <div class="tier-list" id="tierList">
+        <div class="tier-list-head">
+            <h3>Tier List</h3>
+            <span class="tier-list-sub">Based on win rate across all ranks</span>
+        </div>
+        <div class="tier-list-body" id="tierListBody">
+            <div class="tier-list-loading" style="animation:pulse 1.5s infinite">Loading tier data...</div>
+        </div>
+    </div>
+
     <div class="heroes-columns">
         {heroTypes.map(type => (
             <div class={`hero-column col-${type}`} data-hero-type={type}>

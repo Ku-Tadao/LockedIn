@@ -13,6 +13,7 @@ const API = 'https://api.deadlock-api.com';
 const ASSETS_API = 'https://assets.deadlock-api.com';
 
 const state = {
+  tierLoaded: false,
   metaLoaded: false,
   lbLoaded: false,
   lbRegion: 'Europe',
@@ -58,6 +59,10 @@ function showSection(id) {
     el.style.display = '';
     setActiveNav(id);
   }
+  if (id === 'heroes' && !state.tierLoaded) {
+    state.tierLoaded = true;
+    buildTierList();
+  }
   if (id === 'stats' && !state.metaLoaded) {
     state.metaLoaded = true;
     fetchHeroStats();
@@ -90,6 +95,86 @@ function filterByType(type) {
       col.style.display = col.dataset.heroType === type ? '' : 'none';
     }
   });
+}
+
+// ── Tier List ──
+async function buildTierList() {
+  const body = document.getElementById('tierListBody');
+  if (!body) return;
+
+  try {
+    const r = await fetch(API + '/v1/analytics/hero-stats?min_badge_level=0');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!data || !data.length) {
+      body.innerHTML = '<div class="tier-list-loading">No tier data available.</div>';
+      return;
+    }
+
+    // Compute win rates
+    const enriched = data.map((s) => {
+      const hero = findHero(s.hero_id);
+      const m = s.matches || 1;
+      return {
+        hero,
+        hero_id: s.hero_id,
+        win_rate: (s.wins / m) * 100,
+        matches: m,
+      };
+    }).filter((s) => s.hero);
+
+    // Group by tier
+    const tiers = { S: [], A: [], B: [], C: [], D: [] };
+    enriched.forEach((s) => {
+      const t = getTier(s.win_rate);
+      tiers[t.l].push(s);
+    });
+
+    // Sort within each tier by win rate desc
+    Object.values(tiers).forEach((arr) => arr.sort((a, b) => b.win_rate - a.win_rate));
+
+    const tierMeta = [
+      { key: 'S', label: 'S', cls: 'tier-s', desc: 'Overpowered' },
+      { key: 'A', label: 'A', cls: 'tier-a', desc: 'Strong' },
+      { key: 'B', label: 'B', cls: 'tier-b', desc: 'Balanced' },
+      { key: 'C', label: 'C', cls: 'tier-c', desc: 'Weak' },
+      { key: 'D', label: 'D', cls: 'tier-d', desc: 'Underperforming' },
+    ];
+
+    let html = '';
+    tierMeta.forEach((tm) => {
+      const heroes = tiers[tm.key];
+      html += '<div class="tier-row">';
+      html += '<div class="tier-row-label ' + tm.cls + '"><span class="tier-row-letter">' + tm.label + '</span><span class="tier-row-desc">' + tm.desc + '</span></div>';
+      html += '<div class="tier-row-heroes">';
+      if (heroes.length === 0) {
+        html += '<span class="tier-empty">No heroes</span>';
+      } else {
+        heroes.forEach((s) => {
+          const img = s.hero.images?.icon_hero_card_webp || s.hero.images?.icon_hero_card || s.hero.images?.icon_image_small_webp || '';
+          const name = s.hero.name;
+          const type = s.hero.hero_type || '';
+          const typeColor = 'var(--' + type + ', var(--muted))';
+          html += '<button class="tier-hero" data-hero-id="' + s.hero_id + '" title="' + esc(name) + ' — ' + s.win_rate.toFixed(1) + '% WR">';
+          html += '<img src="' + img + '" alt="' + esc(name) + '" loading="lazy"/>';
+          html += '<span class="tier-hero-name">' + esc(name) + '</span>';
+          html += '<span class="tier-hero-wr" style="color:' + (s.win_rate >= 50 ? 'var(--accent)' : typeColor) + '">' + s.win_rate.toFixed(1) + '%</span>';
+          html += '</button>';
+        });
+      }
+      html += '</div></div>';
+    });
+
+    body.innerHTML = html;
+
+    // Bind click handlers on tier hero buttons
+    body.querySelectorAll('.tier-hero').forEach((btn) => {
+      btn.addEventListener('click', () => { if (btn.dataset.heroId) showHeroDetails(btn.dataset.heroId); });
+    });
+
+  } catch (e) {
+    body.innerHTML = '<div class="tier-list-loading">Error loading tier data. Try refreshing.</div>';
+  }
 }
 
 // ── Hero Detail Modal ──
