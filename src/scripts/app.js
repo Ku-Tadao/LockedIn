@@ -460,7 +460,7 @@ async function fetchAbilityDetails(hero, sigKeys) {
 }
 
 function prettyAbilityName(raw) {
-  return String(raw || '').replace(/^(ability_|citadel_ability_)/i, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return String(raw || '').replace(/^(ability_|citadel_ability_)/i, '').replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function closeModal() {
