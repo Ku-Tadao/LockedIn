@@ -97,7 +97,7 @@ header { padding:1.5rem 0 1rem; }
 }
 .header-brand { display:flex; align-items:center; gap:.75rem; }
 .header-brand h1 {
-    font-size:1.6rem; font-weight:700; margin:0; text-transform:uppercase; letter-spacing:.08em;
+    font-size:1.6rem; font-weight:700; margin:0; text-transform:uppercase; letter-spacing:.1em;
     color:var(--brand);
 }
 .header-brand .version-pill {
@@ -138,7 +138,7 @@ nav {
 .nav-inner { display:flex; align-items:center; gap:.35rem; padding:.6rem 0; overflow-x:auto; flex:1; min-width:0; }
 .nav-link {
     border:none; background:transparent; padding:.45rem .85rem; border-radius:10px;
-    color:var(--muted); font-weight:700; font-size:.85rem; cursor:pointer;
+    color:var(--muted); font-weight:700; font-size:.82rem; cursor:pointer;
     transition:all .2s ease; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap;
 }
 .nav-link:hover { color:var(--text); background:var(--surface-strong); }
@@ -234,7 +234,7 @@ section.content { animation:fadeUp .45s cubic-bezier(.4,0,.2,1) both; }
 }
 .overview-splash::after {
     content:''; position:absolute; top:0; left:0; right:0; height:3px;
-    background:var(--brand); z-index:2;
+    background:linear-gradient(90deg, var(--brand), var(--accent)); z-index:2;
 }
 .splash-inner {
     position:relative; z-index:1; padding:3rem 2rem 2rem; text-align:center;
